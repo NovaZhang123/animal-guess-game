@@ -1,1059 +1,645 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🐾 Guess the Animal! – Fun English Learning Game</title>
-  <style>
-    /* ===== Reset & Base ===== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🐾 Guess the Animal!</title>
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-    body {
-      font-family: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      color: #333;
-    }
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  display:flex;flex-direction:column;align-items:center;
+  padding:24px 16px;
+  color:#333;
+}
 
-    /* ===== Header ===== */
-    .header {
-      text-align: center;
-      color: white;
-      margin-bottom: 24px;
-    }
-    .header h1 {
-      font-size: 2.4rem;
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-      letter-spacing: 1px;
-    }
-    .header p {
-      font-size: 1rem;
-      opacity: 0.9;
-      margin-top: 6px;
-    }
+/* ── Header ── */
+.header{text-align:center;color:#fff;margin-bottom:20px}
+.header h1{font-size:2rem;text-shadow:0 2px 10px rgba(0,0,0,.3);letter-spacing:.5px}
+.header p{opacity:.85;font-size:.9rem;margin-top:4px}
 
-    /* ===== Mode Toggle ===== */
-    .mode-bar {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .mode-btn {
-      padding: 8px 24px;
-      border-radius: 999px;
-      border: 2px solid white;
-      background: transparent;
-      color: white;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .mode-btn.active, .mode-btn:hover {
-      background: white;
-      color: #764ba2;
-    }
+/* ── Tab bar ── */
+.tabs{display:flex;gap:10px;margin-bottom:18px}
+.tab{
+  padding:8px 26px;border-radius:999px;
+  border:2px solid #fff;background:transparent;
+  color:#fff;font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:all .2s
+}
+.tab.active,.tab:hover{background:#fff;color:#764ba2}
 
-    /* ===== Card ===== */
-    .card {
-      background: white;
-      border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-      width: 100%;
-      max-width: 700px;
-      padding: 32px;
-      position: relative;
-    }
+/* ── Card ── */
+.card{
+  background:#fff;border-radius:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.22);
+  width:100%;max-width:720px;padding:28px 28px 32px;
+}
 
-    /* ===== Teacher Setup Panel ===== */
-    #teacher-panel { display: block; }
-    #game-panel    { display: none; }
+/* ════════════════════════════════
+   TEACHER PANEL
+════════════════════════════════ */
+#teacher{display:block}
+#game   {display:none}
 
-    .section-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #764ba2;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+.sec-title{
+  font-size:1.05rem;font-weight:700;color:#764ba2;
+  margin-bottom:12px;display:flex;align-items:center;gap:6px
+}
 
-    /* Upload zone */
-    .upload-zone {
-      border: 3px dashed #c4b5fd;
-      border-radius: 16px;
-      padding: 36px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: #faf5ff;
-    }
-    .upload-zone:hover { border-color: #764ba2; background: #f3e8ff; }
-    .upload-zone .icon { font-size: 3rem; }
-    .upload-zone p { color: #888; margin-top: 8px; font-size: 0.95rem; }
-    .upload-zone input { display: none; }
+/* Drop zone */
+.drop-zone{
+  border:3px dashed #c4b5fd;border-radius:16px;
+  padding:38px 20px;text-align:center;
+  cursor:pointer;background:#faf5ff;transition:all .2s;
+  position:relative
+}
+.drop-zone:hover,.drop-zone.over{border-color:#764ba2;background:#f3e8ff}
+.drop-zone .dz-icon{font-size:2.8rem}
+.drop-zone p{color:#999;margin-top:8px;font-size:.9rem}
+.drop-zone input{display:none}
 
-    /* Image preview in teacher panel */
-    .preview-wrap {
-      position: relative;
-      display: none;
-      margin-top: 16px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #f0f0f0;
-      max-height: 280px;
-    }
-    .preview-wrap img {
-      width: 100%;
-      max-height: 280px;
-      object-fit: contain;
-      display: block;
-    }
-    .processing-overlay {
-      position: absolute; inset: 0;
-      background: rgba(118, 75, 162, 0.7);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      color: white; font-size: 1rem; font-weight: 600;
-      display: none;
-    }
-    .spinner {
-      width: 48px; height: 48px;
-      border: 5px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* Batch progress */
+.batch-bar{
+  display:none;margin-top:14px;
+  background:#ede9fe;border-radius:10px;overflow:hidden;height:10px
+}
+.batch-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);width:0%;transition:width .3s}
 
-    /* Form fields */
-    .form-group { margin-top: 18px; }
-    .form-group label {
-      display: block; font-weight: 600; color: #555;
-      margin-bottom: 6px; font-size: 0.9rem;
-    }
-    .form-group input, .form-group select {
-      width: 100%; padding: 10px 14px;
-      border: 2px solid #e0d7f7;
-      border-radius: 10px; font-size: 0.95rem;
-      outline: none; transition: border 0.2s;
-    }
-    .form-group input:focus, .form-group select:focus { border-color: #764ba2; }
+/* Thumbnail grid */
+.thumb-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;margin-top:14px
+}
+.thumb-item{
+  border-radius:12px;overflow:hidden;
+  border:2px solid #e0d7f7;position:relative;
+  background:#f8f4ff;cursor:pointer;
+}
+.thumb-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block;transition:filter .3s}
+.thumb-item .sil-badge{
+  position:absolute;bottom:4px;right:4px;
+  background:rgba(118,75,162,.85);color:#fff;
+  border-radius:6px;font-size:.65rem;padding:2px 5px;font-weight:700
+}
+.thumb-item .del-btn{
+  position:absolute;top:4px;right:4px;
+  background:rgba(239,68,68,.9);color:#fff;
+  border:none;border-radius:50%;width:20px;height:20px;
+  font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .2s
+}
+.thumb-item:hover .del-btn{opacity:1}
+.thumb-item.processing img{filter:brightness(.5)}
+.thumb-item .spinner-mini{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;animation:spin .8s linear infinite;display:none
+}
+.thumb-item.processing .spinner-mini{display:flex}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-    /* Hint checkboxes */
-    .hint-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px; margin-top: 8px;
-    }
-    .hint-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px;
-      border: 2px solid #e0d7f7; border-radius: 10px;
-      cursor: pointer; transition: all 0.15s; font-size: 0.88rem;
-    }
-    .hint-item:hover { border-color: #764ba2; background: #faf5ff; }
-    .hint-item input[type=checkbox] { accent-color: #764ba2; width: 16px; height: 16px; }
-    .hint-item.checked { border-color: #764ba2; background: #f3e8ff; font-weight: 600; }
+/* Start button */
+.btn-start{
+  margin-top:22px;width:100%;padding:14px;
+  border-radius:14px;border:none;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;font-size:1.1rem;font-weight:700;
+  cursor:pointer;box-shadow:0 6px 20px rgba(118,75,162,.4);
+  transition:transform .15s,box-shadow .15s
+}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(118,75,162,.5)}
+.btn-start:disabled{opacity:.45;cursor:not-allowed;transform:none}
 
-    /* Reveal-mode radio */
-    .reveal-options { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
-    .reveal-opt {
-      display: flex; align-items: center; gap: 6px;
-      padding: 8px 14px; border: 2px solid #e0d7f7;
-      border-radius: 10px; cursor: pointer; font-size: 0.88rem;
-      transition: all 0.15s;
-    }
-    .reveal-opt:hover { border-color: #764ba2; background: #faf5ff; }
-    .reveal-opt input { accent-color: #764ba2; }
+/* ════════════════════════════════
+   GAME PANEL
+════════════════════════════════ */
+/* Top bar */
+.game-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;flex-wrap:wrap;gap:8px
+}
+.card-counter{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;border-radius:999px;padding:5px 16px;
+  font-size:.85rem;font-weight:700
+}
+.nav-btns{display:flex;gap:8px}
+.nav-btn{
+  width:40px;height:40px;border-radius:50%;
+  border:2px solid #764ba2;background:#fff;
+  color:#764ba2;font-size:1.1rem;font-weight:700;
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center
+}
+.nav-btn:hover:not(:disabled){background:#764ba2;color:#fff}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
 
-    /* Start button */
-    .btn-start {
-      margin-top: 24px; width: 100%;
-      padding: 14px; border-radius: 14px;
-      border: none; background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white; font-size: 1.15rem; font-weight: 700;
-      cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 6px 20px rgba(118,75,162,0.4);
-    }
-    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(118,75,162,0.5); }
-    .btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+/* Stage */
+.stage{
+  position:relative;border-radius:20px;
+  overflow:hidden;background:#f0ebff;
+  width:100%;aspect-ratio:4/3;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none;
+  box-shadow:0 4px 24px rgba(118,75,162,.12)
+}
+.stage-img{
+  max-width:100%;max-height:100%;
+  object-fit:contain;display:block;
+  transition:filter .5s ease,opacity .5s ease;
+  pointer-events:none
+}
+/* silhouette state */
+.stage-img.sil{filter:brightness(0);opacity:.88}
+/* revealed state */
+.stage-img.revealed{filter:none;opacity:1}
 
-    /* ===== Game Panel ===== */
-    .game-top {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 20px;
-    }
-    .game-top h2 { font-size: 1.4rem; color: #764ba2; font-weight: 800; }
-    .score-badge {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white; border-radius: 999px;
-      padding: 6px 16px; font-weight: 700; font-size: 0.9rem;
-    }
+/* Click hint overlay */
+.click-hint{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  background:rgba(118,75,162,.75);color:#fff;
+  border-radius:999px;padding:6px 18px;font-size:.82rem;font-weight:600;
+  pointer-events:none;transition:opacity .3s;white-space:nowrap
+}
 
-    /* Main image stage */
-    .stage {
-      position: relative; border-radius: 20px;
-      overflow: hidden; background: #f8f4ff;
-      min-height: 220px; display: flex;
-      align-items: center; justify-content: center;
-      margin-bottom: 20px;
-    }
-    .stage-img {
-      max-width: 100%; max-height: 300px;
-      object-fit: contain; display: block;
-      transition: filter 0.6s ease, opacity 0.6s ease;
-    }
-    .stage-img.gray { filter: grayscale(100%) brightness(0.6); }
-    .stage-img.silhouette { filter: brightness(0) invert(0); opacity: 0.15; }
+/* Reveal flash */
+.flash{
+  position:absolute;inset:0;
+  background:radial-gradient(circle,rgba(255,215,0,.5),transparent 70%);
+  opacity:0;pointer-events:none;border-radius:20px;
+  transition:opacity .15s
+}
+.flash.go{opacity:1}
 
-    /* Silhouette canvas (drawn on top) */
-    #silhouette-canvas {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-    }
+/* Stars */
+.stars-wrap{position:fixed;inset:0;pointer-events:none;z-index:9999}
+.star{
+  position:absolute;font-size:1.8rem;
+  animation:floatUp 1.4s ease-out forwards
+}
+@keyframes floatUp{
+  0%  {transform:translateY(0) scale(.5) rotate(0deg);opacity:1}
+  100%{transform:translateY(-180px) scale(1.4) rotate(540deg);opacity:0}
+}
 
-    /* Reveal overlay when answered */
-    .reveal-flash {
-      position: absolute; inset: 0;
-      background: rgba(255,215,0,0.35);
-      display: none; border-radius: 20px;
-      animation: flash 0.5s ease;
-    }
-    @keyframes flash {
-      0%   { opacity: 0; }
-      50%  { opacity: 1; }
-      100% { opacity: 0; }
-    }
+/* Dot strip */
+.dot-strip{
+  display:flex;justify-content:center;gap:6px;
+  margin-top:14px;flex-wrap:wrap
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#e0d7f7;transition:background .3s,transform .3s;
+  cursor:pointer
+}
+.dot.active{background:#764ba2;transform:scale(1.35)}
+.dot.done{background:#a78bfa}
 
-    /* Hint banner */
-    .hint-banner {
-      background: linear-gradient(90deg, #f3e8ff, #e0d7f7);
-      border-left: 4px solid #764ba2;
-      border-radius: 12px; padding: 10px 16px;
-      font-size: 0.88rem; color: #555;
-      margin-bottom: 14px; display: none;
-    }
+/* Back btn */
+.btn-back{
+  margin-top:16px;padding:9px 22px;border-radius:10px;
+  border:2px solid #764ba2;background:#fff;color:#764ba2;
+  font-weight:700;font-size:.88rem;cursor:pointer;transition:all .15s
+}
+.btn-back:hover{background:#764ba2;color:#fff}
 
-    /* Q&A area */
-    .qa-area { margin-bottom: 18px; }
-    .qa-area .qa-title {
-      font-weight: 700; color: #764ba2; font-size: 1rem; margin-bottom: 10px;
-    }
-    .question-card {
-      background: #faf5ff; border: 2px solid #e0d7f7;
-      border-radius: 14px; padding: 14px 18px;
-      margin-bottom: 10px; transition: all 0.2s;
-    }
-    .question-card .q-text {
-      font-size: 1rem; font-weight: 600; color: #333; margin-bottom: 10px;
-    }
-    .q-btn-row { display: flex; gap: 10px; }
-    .q-btn {
-      flex: 1; padding: 8px; border-radius: 10px;
-      border: 2px solid; font-size: 0.9rem; font-weight: 600;
-      cursor: pointer; transition: all 0.15s;
-    }
-    .q-btn.yes  { border-color: #22c55e; color: #22c55e; background: transparent; }
-    .q-btn.no   { border-color: #ef4444; color: #ef4444; background: transparent; }
-    .q-btn.yes:hover, .q-btn.yes.selected { background: #22c55e; color: white; }
-    .q-btn.no:hover,  .q-btn.no.selected  { background: #ef4444; color: white; }
-    .q-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+/* Shuffle btn */
+.btn-shuffle{
+  padding:9px 22px;border-radius:10px;
+  border:none;background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;font-weight:700;font-size:.88rem;cursor:pointer;transition:opacity .15s
+}
+.btn-shuffle:hover{opacity:.85}
 
-    /* Answered badge */
-    .q-answered {
-      display: inline-block; padding: 3px 10px;
-      border-radius: 999px; font-size: 0.8rem; font-weight: 700;
-      margin-left: 8px;
-    }
-    .q-answered.yes-ans { background: #dcfce7; color: #16a34a; }
-    .q-answered.no-ans  { background: #fee2e2; color: #dc2626; }
-
-    /* Guess input */
-    .guess-area { margin-bottom: 18px; }
-    .guess-area label { font-weight: 700; color: #764ba2; font-size: 1rem; display: block; margin-bottom: 8px; }
-    .guess-row { display: flex; gap: 10px; }
-    .guess-input {
-      flex: 1; padding: 12px 16px; border-radius: 12px;
-      border: 2px solid #e0d7f7; font-size: 1rem; outline: none;
-      transition: border 0.2s;
-    }
-    .guess-input:focus { border-color: #764ba2; }
-    .guess-input::placeholder { color: #bbb; }
-    .btn-guess {
-      padding: 12px 24px; border-radius: 12px;
-      border: none; background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white; font-weight: 700; font-size: 1rem;
-      cursor: pointer; transition: transform 0.15s;
-    }
-    .btn-guess:hover { transform: translateY(-1px); }
-
-    /* Feedback message */
-    .feedback {
-      text-align: center; font-size: 1.4rem;
-      font-weight: 800; padding: 16px;
-      border-radius: 14px; display: none; margin-bottom: 16px;
-      animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    @keyframes popIn {
-      from { transform: scale(0.7); opacity: 0; }
-      to   { transform: scale(1);   opacity: 1; }
-    }
-    .feedback.correct {
-      background: #dcfce7; color: #15803d;
-      border: 3px solid #22c55e;
-    }
-    .feedback.wrong {
-      background: #fee2e2; color: #dc2626;
-      border: 3px solid #ef4444;
-    }
-
-    /* Action buttons row */
-    .action-row {
-      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
-    }
-    .btn-action {
-      padding: 10px 20px; border-radius: 12px;
-      border: 2px solid #764ba2; background: white;
-      color: #764ba2; font-weight: 700; font-size: 0.9rem;
-      cursor: pointer; transition: all 0.15s;
-    }
-    .btn-action:hover { background: #764ba2; color: white; }
-    .btn-action.primary {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white; border: none;
-    }
-    .btn-action.primary:hover { opacity: 0.9; }
-
-    /* Stars animation */
-    .stars-container {
-      position: fixed; pointer-events: none;
-      inset: 0; z-index: 9999;
-    }
-    .star {
-      position: absolute; font-size: 2rem;
-      animation: floatStar 1.5s ease-out forwards;
-    }
-    @keyframes floatStar {
-      0%   { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(-200px) scale(1.5) rotate(720deg); opacity: 0; }
-    }
-
-    /* Attempts counter */
-    .attempts-wrap { text-align: center; color: #999; font-size: 0.85rem; margin-bottom: 8px; }
-    .attempt-dot {
-      display: inline-block; width: 12px; height: 12px;
-      border-radius: 50%; background: #e0d7f7;
-      margin: 0 3px; transition: background 0.3s;
-    }
-    .attempt-dot.used { background: #ef4444; }
-    .attempt-dot.correct { background: #22c55e; }
-
-    /* Reveal reveal-all button hint */
-    .reveal-btn {
-      margin-top: 4px; background: #fff3cd; border: 2px solid #f59e0b;
-      color: #92400e; border-radius: 10px; padding: 10px 18px;
-      font-weight: 700; cursor: pointer; font-size: 0.9rem;
-      transition: all 0.2s; display: none;
-    }
-    .reveal-btn:hover { background: #fef3c7; }
-
-    /* ===== Responsive ===== */
-    @media (max-width: 480px) {
-      .card { padding: 20px 16px; }
-      .header h1 { font-size: 1.8rem; }
-      .hint-grid { grid-template-columns: 1fr; }
-      .reveal-options { flex-direction: column; }
-    }
-  </style>
+/* ── Responsive ── */
+@media(max-width:480px){
+  .card{padding:18px 14px}
+  .header h1{font-size:1.6rem}
+  .thumb-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+}
+</style>
 </head>
 <body>
 
-<!-- Stars container for animation -->
-<div class="stars-container" id="starsContainer"></div>
+<div class="stars-wrap" id="starsWrap"></div>
 
 <div class="header">
   <h1>🐾 Guess the Animal!</h1>
-  <p>A fun English learning game for kids 🌟</p>
+  <p>Upload photos → silhouette quiz for your class 🎓</p>
 </div>
 
-<!-- Mode toggle -->
-<div class="mode-bar">
-  <button class="mode-btn active" id="btnTeacher" onclick="switchMode('teacher')">👩‍🏫 Teacher Setup</button>
-  <button class="mode-btn" id="btnStudent" onclick="switchMode('student')">🎮 Student Game</button>
+<div class="tabs">
+  <button class="tab active" id="tabTeacher" onclick="showPanel('teacher')">👩‍🏫 Teacher</button>
+  <button class="tab"        id="tabGame"    onclick="showPanel('game')">🎮 Game</button>
 </div>
 
 <div class="card">
 
-  <!-- ======== TEACHER PANEL ======== -->
-  <div id="teacher-panel">
-    <div class="section-title">📸 Step 1 — Upload Animal Photo</div>
+  <!-- ══════════ TEACHER ══════════ -->
+  <div id="teacher">
+    <div class="sec-title">📸 Upload Animal Photos</div>
 
-    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="icon">🖼️</div>
-      <p>Click or drag &amp; drop an animal photo here</p>
-      <p style="font-size:0.8rem;margin-top:4px;color:#bbb">JPG / PNG / WEBP</p>
-      <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)" />
+    <div class="drop-zone" id="dropZone"
+         onclick="document.getElementById('fileIn').click()"
+         ondragover="dzOver(event)"
+         ondragleave="dzLeave()"
+         ondrop="dzDrop(event)">
+      <div class="dz-icon">🖼️</div>
+      <p>Click or drag &amp; drop — supports multiple files</p>
+      <p style="font-size:.78rem;margin-top:3px;color:#ccc">JPG · PNG · WEBP</p>
+      <input type="file" id="fileIn" accept="image/*" multiple onchange="handleFiles(event.target.files)"/>
     </div>
 
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" src="" alt="Preview" />
-      <div class="processing-overlay" id="processingOverlay">
-        <div class="spinner"></div>
-        <span>Removing background…</span>
-      </div>
-    </div>
+    <div class="batch-bar" id="batchBar"><div class="batch-fill" id="batchFill"></div></div>
 
-    <div class="form-group">
-      <label>🐘 Animal Name (English)</label>
-      <input type="text" id="animalName" placeholder="e.g. elephant, tiger, dolphin…" />
-    </div>
+    <div class="thumb-grid" id="thumbGrid"></div>
 
-    <div class="form-group">
-      <label>🔤 Chinese Translation (optional)</label>
-      <input type="text" id="animalChinese" placeholder="e.g. 大象" />
-    </div>
-
-    <div class="form-group">
-      <label>🌍 Fun Fact (optional, shown after correct answer)</label>
-      <input type="text" id="animalFact" placeholder="e.g. Elephants never forget!" />
-    </div>
-
-    <div class="form-group">
-      <div class="section-title" style="margin-bottom:8px">❓ Step 2 — Choose Hint Questions</div>
-      <p style="font-size:0.85rem;color:#888;margin-bottom:10px">
-        Check the questions whose answer is <strong>YES</strong> for this animal.
-      </p>
-      <div class="hint-grid" id="hintGrid">
-        <!-- Populated by JS -->
-      </div>
-    </div>
-
-    <div class="form-group">
-      <div class="section-title" style="margin-bottom:8px">🎨 Step 3 — Choose Starting Display</div>
-      <div class="reveal-options" id="revealOptions">
-        <label class="reveal-opt">
-          <input type="radio" name="displayMode" value="silhouette" checked />
-          🫥 Silhouette only
-        </label>
-        <label class="reveal-opt">
-          <input type="radio" name="displayMode" value="gray" />
-          🔲 Grayscale photo
-        </label>
-        <label class="reveal-opt">
-          <input type="radio" name="displayMode" value="partial" />
-          🙈 Partial reveal
-        </label>
-      </div>
-    </div>
-
-    <button class="btn-start" id="btnStartGame" onclick="startGame()" disabled>
-      🚀 Start Game!
+    <button class="btn-start" id="btnStart" onclick="startGame()" disabled>
+      🚀 Start Game  (<span id="readyCount">0</span> photos ready)
     </button>
   </div>
 
-  <!-- ======== GAME PANEL ======== -->
-  <div id="game-panel">
-    <div class="game-top">
-      <h2>🐾 What animal am I?</h2>
-      <div class="score-badge" id="scoreBadge">Score: 0</div>
-    </div>
+  <!-- ══════════ GAME ══════════ -->
+  <div id="game">
 
-    <!-- Image stage -->
-    <div class="stage" id="imageStage">
-      <img id="stageImg" class="stage-img gray" src="" alt="Mystery animal" />
-      <canvas id="silhouette-canvas"></canvas>
-      <div class="reveal-flash" id="revealFlash"></div>
-    </div>
-
-    <!-- Hint banner -->
-    <div class="hint-banner" id="hintBanner"></div>
-
-    <!-- Attempts -->
-    <div class="attempts-wrap" id="attemptsWrap"></div>
-
-    <!-- Q&A Section -->
-    <div class="qa-area">
-      <div class="qa-title">🔍 Ask a question to get a clue!</div>
-      <div id="qaList">
-        <!-- Questions rendered here -->
+    <div class="game-topbar">
+      <div style="display:flex;gap:8px">
+        <button class="btn-back"    onclick="showPanel('teacher')">← Edit</button>
+        <button class="btn-shuffle" onclick="shuffleCards()">🔀 Shuffle</button>
+      </div>
+      <div class="card-counter" id="cardCounter">1 / 1</div>
+      <div class="nav-btns">
+        <button class="nav-btn" id="btnPrev" onclick="navigate(-1)">‹</button>
+        <button class="nav-btn" id="btnNext" onclick="navigate(1)">›</button>
       </div>
     </div>
 
-    <!-- Guess input -->
-    <div class="guess-area">
-      <label>✏️ Type your guess in English:</label>
-      <div class="guess-row">
-        <input class="guess-input" id="guessInput" type="text"
-               placeholder="e.g. tiger" onkeydown="if(event.key==='Enter')checkGuess()" />
-        <button class="btn-guess" onclick="checkGuess()">Guess! 🎯</button>
-      </div>
+    <!-- Image stage — click to reveal -->
+    <div class="stage" id="stage" onclick="reveal()">
+      <img id="stageImg" class="stage-img sil" src="" alt=""/>
+      <div class="flash" id="flash"></div>
+      <div class="click-hint" id="clickHint">👆 Click to reveal!</div>
     </div>
 
-    <!-- Feedback -->
-    <div class="feedback" id="feedbackMsg"></div>
+    <!-- Dot navigation -->
+    <div class="dot-strip" id="dotStrip"></div>
 
-    <!-- Reveal button (after 3 wrong attempts) -->
-    <button class="reveal-btn" id="revealBtn" onclick="revealAnswer()">
-      👀 Reveal the Answer
-    </button>
-
-    <!-- Action row -->
-    <div class="action-row">
-      <button class="btn-action" onclick="switchMode('teacher')">← Back to Setup</button>
-      <button class="btn-action primary" id="btnNextRound" onclick="resetGame()" style="display:none">
-        🔄 Play Again!
-      </button>
-    </div>
   </div>
-
 </div>
 
-<!-- ===== SCRIPT ===== -->
 <script>
-// ============================================================
-// DATA
-// ============================================================
-const ALL_QUESTIONS = [
-  { id: 'q1',  text: 'Does it have four legs?',          key: 'fourLegs'   },
-  { id: 'q2',  text: 'Can it fly?',                      key: 'canFly'     },
-  { id: 'q3',  text: 'Does it live in water?',           key: 'inWater'    },
-  { id: 'q4',  text: 'Is it a mammal?',                  key: 'isMammal'   },
-  { id: 'q5',  text: 'Does it have a tail?',             key: 'hasTail'    },
-  { id: 'q6',  text: 'Is it bigger than a dog?',         key: 'biggerDog'  },
-  { id: 'q7',  text: 'Does it eat meat?',                key: 'eatsMeat'   },
-  { id: 'q8',  text: 'Is it a pet?',                     key: 'isPet'      },
-  { id: 'q9',  text: 'Does it have stripes or spots?',   key: 'hasPattern' },
-  { id: 'q10', text: 'Can it swim?',                     key: 'canSwim'    },
-  { id: 'q11', text: 'Does it have feathers?',           key: 'hasFeathers'},
-  { id: 'q12', text: 'Does it have a long neck?',        key: 'longNeck'   },
-];
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let cards   = [];  // [{original, silhouette, name, done}]
+let current = 0;
 
-// State
-let state = {
-  originalImageData: null,  // dataURL of original uploaded image
-  processedImageData: null, // dataURL after background removal (transparent PNG)
-  animalName: '',
-  animalChinese: '',
-  animalFact: '',
-  correctKeys: new Set(),   // which question keys answer YES
-  displayMode: 'silhouette',
-  score: 0,
-  attempts: 0,
-  maxAttempts: 5,
-  gameOver: false,
-  answered: {},             // { qId: true/false }
-};
-
-// ============================================================
-// INIT
-// ============================================================
-window.onload = () => {
-  renderHintGrid();
-  setupDropZone();
-};
-
-function renderHintGrid() {
-  const grid = document.getElementById('hintGrid');
-  grid.innerHTML = ALL_QUESTIONS.map(q => `
-    <label class="hint-item" id="hint-${q.id}" onclick="toggleHint('${q.id}','${q.key}',this)">
-      <input type="checkbox" id="chk-${q.id}" style="pointer-events:none" />
-      ${q.text}
-    </label>
-  `).join('');
+// ═══════════════════════════════════════════════
+// PANEL SWITCH
+// ═══════════════════════════════════════════════
+function showPanel(p) {
+  document.getElementById('teacher').style.display = p === 'teacher' ? 'block' : 'none';
+  document.getElementById('game')   .style.display = p === 'game'    ? 'block' : 'none';
+  document.getElementById('tabTeacher').classList.toggle('active', p === 'teacher');
+  document.getElementById('tabGame')   .classList.toggle('active', p === 'game');
 }
 
-function toggleHint(qId, key, el) {
-  const chk = document.getElementById('chk-' + qId);
-  chk.checked = !chk.checked;
-  if (chk.checked) {
-    el.classList.add('checked');
-    state.correctKeys.add(key);
-  } else {
-    el.classList.remove('checked');
-    state.correctKeys.delete(key);
+// ═══════════════════════════════════════════════
+// DROP ZONE
+// ═══════════════════════════════════════════════
+function dzOver(e)  { e.preventDefault(); document.getElementById('dropZone').classList.add('over'); }
+function dzLeave()  { document.getElementById('dropZone').classList.remove('over'); }
+function dzDrop(e)  { e.preventDefault(); dzLeave(); handleFiles(e.dataTransfer.files); }
+
+// ═══════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════
+async function handleFiles(files) {
+  const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!arr.length) return;
+
+  const bar  = document.getElementById('batchBar');
+  const fill = document.getElementById('batchFill');
+  bar.style.display = 'block';
+
+  for (let i = 0; i < arr.length; i++) {
+    fill.style.width = ((i / arr.length) * 100) + '%';
+    await addCard(arr[i]);
   }
+
+  fill.style.width = '100%';
+  setTimeout(() => { bar.style.display = 'none'; fill.style.width = '0%'; }, 600);
+  updateStartBtn();
 }
 
-// ============================================================
-// FILE UPLOAD & BACKGROUND REMOVAL
-// ============================================================
-function handleFileUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  loadImageFile(file);
+async function addCard(file) {
+  const idx  = cards.length;
+  const name = file.name.replace(/\.[^.]+$/, '');
+  cards.push({ original: null, silhouette: null, name, done: false });
+  renderThumb(idx);
+
+  // Read file
+  const original = await readFileAsDataURL(file);
+  cards[idx].original = original;
+
+  // Mark processing
+  const item = document.getElementById('thumb-' + idx);
+  item.classList.add('processing');
+  item.querySelector('.spinner-mini').style.display = 'flex';
+
+  // Generate silhouette
+  try {
+    cards[idx].silhouette = await makeSilhouette(original);
+  } catch(e) {
+    cards[idx].silhouette = original;
+  }
+  cards[idx].done = true;
+
+  // Update thumb
+  item.classList.remove('processing');
+  item.querySelector('.spinner-mini').style.display = 'none';
+  item.querySelector('img').src = cards[idx].silhouette;
+  item.querySelector('.sil-badge').textContent = '✓ ready';
+
+  updateStartBtn();
 }
 
-function setupDropZone() {
-  const zone = document.getElementById('uploadZone');
-  zone.addEventListener('dragover', ev => { ev.preventDefault(); zone.style.borderColor = '#764ba2'; });
-  zone.addEventListener('dragleave', () => { zone.style.borderColor = '#c4b5fd'; });
-  zone.addEventListener('drop', ev => {
-    ev.preventDefault();
-    zone.style.borderColor = '#c4b5fd';
-    const file = ev.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) loadImageFile(file);
+function readFileAsDataURL(file) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.readAsDataURL(file);
   });
 }
 
-function loadImageFile(file) {
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    state.originalImageData = ev.target.result;
-
-    const wrap = document.getElementById('previewWrap');
-    const img  = document.getElementById('previewImg');
-    wrap.style.display = 'block';
-    img.src = state.originalImageData;
-
-    // Show processing overlay
-    showProcessing(true);
-
-    try {
-      state.processedImageData = await removeBackground(state.originalImageData);
-    } catch(err) {
-      console.warn('BG removal failed, using original:', err);
-      state.processedImageData = state.originalImageData;
-    }
-
-    showProcessing(false);
-    checkStartReady();
-  };
-  reader.readAsDataURL(file);
+// ═══════════════════════════════════════════════
+// THUMBNAIL RENDERING
+// ═══════════════════════════════════════════════
+function renderThumb(idx) {
+  const card = cards[idx];
+  const grid = document.getElementById('thumbGrid');
+  const div  = document.createElement('div');
+  div.className = 'thumb-item processing';
+  div.id = 'thumb-' + idx;
+  div.innerHTML = `
+    <img src="${card.original || ''}" alt=""/>
+    <div class="spinner-mini">⏳</div>
+    <span class="sil-badge">processing…</span>
+    <button class="del-btn" onclick="deleteCard(${idx},event)">✕</button>
+  `;
+  grid.appendChild(div);
 }
 
-function showProcessing(show) {
-  document.getElementById('processingOverlay').style.display = show ? 'flex' : 'none';
+function deleteCard(idx, e) {
+  e.stopPropagation();
+  cards.splice(idx, 1);
+  rebuildThumbs();
+  updateStartBtn();
 }
 
-/**
- * Pure-canvas background removal: removes pixels close to the image border color
- * (simple flood-fill from corners). Works reasonably well for photos on plain / gradient
- * backgrounds. No external API or WASM needed.
- */
-async function removeBackground(dataURL) {
-  return new Promise((resolve) => {
+function rebuildThumbs() {
+  const grid = document.getElementById('thumbGrid');
+  grid.innerHTML = '';
+  cards.forEach((_, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb-item';
+    div.id = 'thumb-' + i;
+    div.innerHTML = `
+      <img src="${cards[i].silhouette || cards[i].original || ''}" alt=""/>
+      <div class="spinner-mini" style="display:none">⏳</div>
+      <span class="sil-badge">${cards[i].done ? '✓ ready' : 'processing…'}</span>
+      <button class="del-btn" onclick="deleteCard(${i},event)">✕</button>
+    `;
+    if (!cards[i].done) div.classList.add('processing');
+    grid.appendChild(div);
+  });
+}
+
+function updateStartBtn() {
+  const ready = cards.filter(c => c.done).length;
+  document.getElementById('readyCount').textContent = ready;
+  document.getElementById('btnStart').disabled = ready === 0;
+}
+
+// ═══════════════════════════════════════════════
+// BACKGROUND REMOVAL → pure silhouette (black)
+// ═══════════════════════════════════════════════
+function makeSilhouette(dataURL) {
+  return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
       const W = img.naturalWidth, H = img.naturalHeight;
+      const canvas = document.createElement('canvas');
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, W, H);
-      const data = imageData.data;
 
-      // Sample corner colors
-      function getPixel(x, y) {
-        const i = (y * W + x) * 4;
-        return [data[i], data[i+1], data[i+2], data[i+3]];
+      const id   = ctx.getImageData(0, 0, W, H);
+      const data = id.data;
+
+      // Sample border pixels as background color
+      const samples = [];
+      for (let x = 0; x < W; x += Math.max(1, Math.floor(W/20))) {
+        samples.push(px(data, W, x, 0), px(data, W, x, H-1));
       }
-      function colorDist(a, b) {
-        return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
+      for (let y = 0; y < H; y += Math.max(1, Math.floor(H/20))) {
+        samples.push(px(data, W, 0, y), px(data, W, W-1, y));
       }
 
-      // Collect corner background samples (8 corners + midpoints)
-      const samplePoints = [
-        [0,0],[W-1,0],[0,H-1],[W-1,H-1],
-        [Math.floor(W/2),0],[Math.floor(W/2),H-1],
-        [0,Math.floor(H/2)],[W-1,Math.floor(H/2)]
-      ];
-      const bgColors = samplePoints.map(([x,y]) => getPixel(x,y));
-
-      const THRESHOLD = 55; // color distance threshold
+      const THRESH = 50;
       const visited = new Uint8Array(W * H);
-      const queue = [];
+      const queue   = [];
 
-      // Seed flood-fill from all border pixels
-      for (let x = 0; x < W; x++) { queue.push([x, 0]); queue.push([x, H-1]); }
-      for (let y = 1; y < H-1; y++) { queue.push([0, y]); queue.push([W-1, y]); }
+      // Seed from all border pixels
+      for (let x = 0; x < W; x++) { queue.push(x, 0); queue.push(x, H-1); }
+      for (let y = 1; y < H-1; y++) { queue.push(0, y); queue.push(W-1, y); }
 
       let head = 0;
       while (head < queue.length) {
-        const [cx, cy] = queue[head++];
+        const cx = queue[head++], cy = queue[head++];
         if (cx < 0 || cy < 0 || cx >= W || cy >= H) continue;
         const idx = cy * W + cx;
         if (visited[idx]) continue;
         visited[idx] = 1;
-
-        const px = getPixel(cx, cy);
-        if (px[3] < 10) {
-          // Already transparent – mark as bg
-          const di = idx * 4;
-          data[di+3] = 0;
-          continue;
-        }
-
-        const isBg = bgColors.some(bg => colorDist(px, bg) < THRESHOLD);
-        if (isBg) {
-          const di = idx * 4;
-          data[di+3] = 0;
-          queue.push([cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]);
+        const p = px(data, W, cx, cy);
+        if (p[3] < 10 || samples.some(s => colorDist(p, s) < THRESH)) {
+          data[idx*4+3] = 0;
+          queue.push(cx-1,cy, cx+1,cy, cx,cy-1, cx,cy+1);
         }
       }
 
-      ctx.putImageData(imageData, 0, 0);
+      // Paint foreground pixels black
+      for (let i = 0; i < W * H; i++) {
+        if (data[i*4+3] > 20) {
+          data[i*4]   = 0;
+          data[i*4+1] = 0;
+          data[i*4+2] = 0;
+          data[i*4+3] = 255;
+        }
+      }
 
-      // Optional: feather edges by slightly eroding alpha
-      featherEdges(ctx, W, H);
-
+      ctx.putImageData(id, 0, 0);
       resolve(canvas.toDataURL('image/png'));
     };
     img.src = dataURL;
   });
 }
 
-function featherEdges(ctx, W, H) {
-  const imageData = ctx.getImageData(0, 0, W, H);
-  const data = imageData.data;
-  // Simple 1-pixel edge softening
-  for (let y = 1; y < H-1; y++) {
-    for (let x = 1; x < W-1; x++) {
-      const i = (y * W + x) * 4;
-      if (data[i+3] > 0) {
-        // Check neighbors for transparency
-        const neighbors = [
-          ((y-1)*W+x)*4, ((y+1)*W+x)*4,
-          (y*W+(x-1))*4, (y*W+(x+1))*4
-        ];
-        const hasTransparentNeighbor = neighbors.some(ni => data[ni+3] === 0);
-        if (hasTransparentNeighbor) {
-          data[i+3] = Math.min(data[i+3], 180);
-        }
-      }
-    }
-  }
-  ctx.putImageData(imageData, 0, 0);
+function px(data, W, x, y) {
+  const i = (y * W + x) * 4;
+  return [data[i], data[i+1], data[i+2], data[i+3]];
+}
+function colorDist(a, b) {
+  return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);
 }
 
-// ============================================================
-// TEACHER: form validation
-// ============================================================
-document.getElementById('animalName').addEventListener('input', checkStartReady);
-
-function checkStartReady() {
-  const hasImage = !!state.originalImageData;
-  const hasName  = document.getElementById('animalName').value.trim().length > 0;
-  document.getElementById('btnStartGame').disabled = !(hasImage && hasName);
-}
-
-// ============================================================
-// MODE SWITCH
-// ============================================================
-function switchMode(mode) {
-  document.getElementById('teacher-panel').style.display = mode === 'teacher' ? 'block' : 'none';
-  document.getElementById('game-panel').style.display    = mode === 'student' ? 'block' : 'none';
-  document.getElementById('btnTeacher').classList.toggle('active', mode === 'teacher');
-  document.getElementById('btnStudent').classList.toggle('active', mode === 'student');
-}
-
-// ============================================================
-// START GAME
-// ============================================================
+// ═══════════════════════════════════════════════
+// START / RENDER GAME
+// ═══════════════════════════════════════════════
 function startGame() {
-  // Collect settings
-  state.animalName    = document.getElementById('animalName').value.trim().toLowerCase();
-  state.animalChinese = document.getElementById('animalChinese').value.trim();
-  state.animalFact    = document.getElementById('animalFact').value.trim();
-  state.displayMode   = document.querySelector('input[name="displayMode"]:checked').value;
-  state.attempts      = 0;
-  state.gameOver      = false;
-  state.answered      = {};
-
-  switchMode('student');
-  renderGame();
+  current = 0;
+  cards.forEach(c => c.revealed = false);
+  showPanel('game');
+  renderCard();
+  buildDots();
 }
 
-function renderGame() {
-  // Set image
-  const stageImg = document.getElementById('stageImg');
-  stageImg.className = 'stage-img';
-
-  if (state.displayMode === 'silhouette' && state.processedImageData) {
-    stageImg.src = state.processedImageData;
-    stageImg.style.filter = 'brightness(0)';
-    stageImg.style.opacity = '0.85';
-  } else if (state.displayMode === 'gray') {
-    stageImg.src = state.originalImageData;
-    stageImg.style.filter = 'grayscale(100%) brightness(0.7)';
-    stageImg.style.opacity = '1';
-  } else if (state.displayMode === 'partial') {
-    // Show processed PNG (transparent bg) with partial blur
-    stageImg.src = state.processedImageData || state.originalImageData;
-    stageImg.style.filter = 'blur(8px) brightness(0.6)';
-    stageImg.style.opacity = '1';
-  }
-
-  // Score
-  document.getElementById('scoreBadge').textContent = `Score: ${state.score}`;
-
-  // Attempts dots
-  renderAttempts();
-
-  // Hide feedback
-  document.getElementById('feedbackMsg').style.display = 'none';
-  document.getElementById('revealBtn').style.display = 'none';
-  document.getElementById('btnNextRound').style.display = 'none';
-  document.getElementById('hintBanner').style.display = 'none';
-  document.getElementById('guessInput').value = '';
-  document.getElementById('guessInput').disabled = false;
-
-  // Render questions
-  renderQuestions();
-}
-
-function renderAttempts() {
-  const wrap = document.getElementById('attemptsWrap');
-  let html = `Attempts left: ${state.maxAttempts - state.attempts} &nbsp;`;
-  for (let i = 0; i < state.maxAttempts; i++) {
-    const cls = i < state.attempts ? 'used' : '';
-    html += `<span class="attempt-dot ${cls}"></span>`;
-  }
-  wrap.innerHTML = html;
-}
-
-// ============================================================
-// QUESTIONS
-// ============================================================
-function renderQuestions() {
-  const container = document.getElementById('qaList');
-  const entries = Object.entries(state.answered);
-  const unanswered = ALL_QUESTIONS.filter(q => !(q.id in state.answered));
-  const answered   = ALL_QUESTIONS.filter(q => q.id in state.answered);
-
-  let html = '';
-
-  // Show unanswered questions (up to 4 at a time for cleanliness)
-  const show = unanswered.slice(0, 4);
-  show.forEach(q => {
-    html += `
-      <div class="question-card" id="qcard-${q.id}">
-        <div class="q-text">🔹 ${q.text}</div>
-        <div class="q-btn-row">
-          <button class="q-btn yes" onclick="answerQuestion('${q.id}','${q.key}',true)">✅ Yes</button>
-          <button class="q-btn no"  onclick="answerQuestion('${q.id}','${q.key}',false)">❌ No</button>
-        </div>
-      </div>`;
-  });
-
-  // Show answered questions compactly
-  answered.forEach(q => {
-    const wasYes = state.answered[q.id];
-    const badge  = wasYes
-      ? '<span class="q-answered yes-ans">✅ YES</span>'
-      : '<span class="q-answered no-ans">❌ NO</span>';
-    html += `
-      <div class="question-card" style="opacity:0.65;padding:10px 18px">
-        <div class="q-text" style="font-size:0.9rem;margin:0">${q.text} ${badge}</div>
-      </div>`;
-  });
-
-  container.innerHTML = html;
-}
-
-function answerQuestion(qId, key, studentSaid) {
-  // Record answer
-  state.answered[qId] = studentSaid;
-
-  // Determine if correct
-  const actualYes = state.correctKeys.has(key);
-  const isRight   = (studentSaid === actualYes);
-
-  // Visual feedback on card
-  const card = document.getElementById('qcard-' + qId);
-  if (card) {
-    card.style.borderColor = isRight ? '#22c55e' : '#ef4444';
-    card.style.background  = isRight ? '#f0fdf4' : '#fff1f2';
-  }
-
-  // Small hint banner update
-  showClueAfterAnswer(key, actualYes);
-
-  // Re-render after short delay
-  setTimeout(() => renderQuestions(), 600);
-}
-
-function showClueAfterAnswer(key, actualYes) {
-  const banner = document.getElementById('hintBanner');
-  const phrases = {
-    fourLegs:    actualYes ? '💡 It walks on four legs!' : '💡 It doesn\'t have four legs!',
-    canFly:      actualYes ? '💡 It can fly through the sky!' : '💡 It cannot fly.',
-    inWater:     actualYes ? '💡 It lives in or near water!' : '💡 It doesn\'t live in water.',
-    isMammal:    actualYes ? '💡 It\'s a mammal — warm-blooded!' : '💡 It\'s not a mammal.',
-    hasTail:     actualYes ? '💡 It has a tail!' : '💡 No tail on this one!',
-    biggerDog:   actualYes ? '💡 It\'s bigger than a dog!' : '💡 It\'s small — smaller than a dog!',
-    eatsMeat:    actualYes ? '💡 It\'s a meat-eater (carnivore)!' : '💡 It doesn\'t eat meat.',
-    isPet:       actualYes ? '💡 Some people keep it as a pet!' : '💡 It\'s not typically a pet.',
-    hasPattern:  actualYes ? '💡 Look for stripes or spots!' : '💡 No stripes or spots.',
-    canSwim:     actualYes ? '💡 It\'s a good swimmer!' : '💡 Swimming is not its thing.',
-    hasFeathers: actualYes ? '💡 It has feathers — probably a bird!' : '💡 No feathers!',
-    longNeck:    actualYes ? '💡 That\'s a long neck!' : '💡 Normal-sized neck.',
-  };
-  const msg = phrases[key] || '';
-  if (msg) {
-    banner.textContent = msg;
-    banner.style.display = 'block';
-  }
-}
-
-// ============================================================
-// GUESS
-// ============================================================
-function checkGuess() {
-  if (state.gameOver) return;
-
-  const input  = document.getElementById('guessInput');
-  const guess  = input.value.trim().toLowerCase();
-  if (!guess) { input.focus(); return; }
-
-  const correct = guess === state.animalName ||
-                  state.animalName.includes(guess) ||
-                  guess.includes(state.animalName);
-
-  if (correct) {
-    handleCorrect();
-  } else {
-    handleWrong();
-  }
-}
-
-function handleCorrect() {
-  state.gameOver = true;
-  state.score += Math.max(10, 50 - state.attempts * 8);
-
-  // Reveal image
-  revealImage();
-
-  // Feedback
-  showFeedback(true);
-
-  // Celebration
-  launchStars();
-
-  document.getElementById('scoreBadge').textContent = `Score: ${state.score}`;
-  document.getElementById('guessInput').disabled = true;
-  document.getElementById('btnNextRound').style.display = 'inline-block';
-
-  if (state.animalFact) {
-    const banner = document.getElementById('hintBanner');
-    banner.innerHTML = `🌟 <strong>Fun Fact:</strong> ${state.animalFact}` +
-      (state.animalChinese ? ` &nbsp;|&nbsp; 🇨🇳 ${state.animalChinese}` : '');
-    banner.style.display = 'block';
-  }
-}
-
-function handleWrong() {
-  state.attempts++;
-  renderAttempts();
-
-  if (state.attempts >= state.maxAttempts) {
-    // Game over
-    state.gameOver = true;
-    showFeedback(false);
-    document.getElementById('revealBtn').style.display = 'block';
-    document.getElementById('btnNextRound').style.display = 'inline-block';
-    document.getElementById('guessInput').disabled = true;
-  } else {
-    // Wrong but still going
-    const feedback = document.getElementById('feedbackMsg');
-    feedback.className = 'feedback wrong';
-    feedback.textContent = `❌ Not quite! Try again! (${state.maxAttempts - state.attempts} left)`;
-    feedback.style.display = 'block';
-    setTimeout(() => { feedback.style.display = 'none'; }, 1800);
-
-    // Progressively reveal image as attempts increase
-    progressiveReveal();
-  }
-}
-
-function progressiveReveal() {
+function renderCard() {
+  const c   = cards[current];
   const img = document.getElementById('stageImg');
-  const progress = state.attempts / state.maxAttempts;
 
-  if (state.displayMode === 'silhouette') {
-    const brightness = progress * 0.5;
-    img.style.filter = `brightness(${brightness}) sepia(0.3)`;
-  } else if (state.displayMode === 'partial') {
-    const blurAmount = Math.max(0, 8 - progress * 10);
-    const bright = 0.6 + progress * 0.4;
-    img.style.filter = `blur(${blurAmount}px) brightness(${bright})`;
-  } else if (state.displayMode === 'gray') {
-    const saturation = progress * 100;
-    img.style.filter = `grayscale(${100 - saturation}%) brightness(${0.7 + progress * 0.3})`;
+  // Reset to silhouette
+  img.src = c.silhouette || c.original;
+  img.className = 'stage-img sil';
+
+  document.getElementById('flash').classList.remove('go');
+  document.getElementById('clickHint').style.opacity = c.revealed ? '0' : '1';
+
+  // If already revealed during this session, show original
+  if (c.revealed) {
+    img.src = c.original;
+    img.className = 'stage-img revealed';
+    document.getElementById('clickHint').style.opacity = '0';
   }
+
+  updateCounter();
+  updateDots();
+  updateNav();
 }
 
-function revealImage() {
+// ═══════════════════════════════════════════════
+// REVEAL on click
+// ═══════════════════════════════════════════════
+function reveal() {
+  const c = cards[current];
+  if (c.revealed) return;
+  c.revealed = true;
+
   const img = document.getElementById('stageImg');
-  img.src = state.processedImageData || state.originalImageData;
-  img.style.filter = 'none';
-  img.style.opacity = '1';
+  img.src = c.original;
+  img.className = 'stage-img revealed';
+  document.getElementById('clickHint').style.opacity = '0';
 
-  const flash = document.getElementById('revealFlash');
-  flash.style.display = 'block';
-  setTimeout(() => { flash.style.display = 'none'; }, 600);
+  // Flash
+  const flash = document.getElementById('flash');
+  flash.classList.add('go');
+  setTimeout(() => flash.classList.remove('go'), 300);
+
+  // Stars
+  spawnStars();
+  updateDots();
 }
 
-function revealAnswer() {
-  revealImage();
-  showFeedback(false, true);
-  document.getElementById('revealBtn').style.display = 'none';
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= cards.length) return;
+  current = next;
+  renderCard();
 }
 
-function showFeedback(correct, reveal = false) {
-  const feedback = document.getElementById('feedbackMsg');
-  if (correct) {
-    const name = state.animalName.charAt(0).toUpperCase() + state.animalName.slice(1);
-    feedback.className = 'feedback correct';
-    feedback.innerHTML = `🎉 Correct! It's a <strong>${name}</strong>!` +
-      (state.animalChinese ? ` &nbsp;(${state.animalChinese})` : '');
-  } else if (reveal) {
-    const name = state.animalName.charAt(0).toUpperCase() + state.animalName.slice(1);
-    feedback.className = 'feedback wrong';
-    feedback.innerHTML = `🔎 The answer was: <strong>${name}</strong>` +
-      (state.animalChinese ? ` &nbsp;(${state.animalChinese})` : '');
-  } else {
-    feedback.className = 'feedback wrong';
-    feedback.innerHTML = `😢 Out of attempts! Click <em>Reveal</em> to see the answer.`;
+function updateNav() {
+  document.getElementById('btnPrev').disabled = current === 0;
+  document.getElementById('btnNext').disabled = current === cards.length - 1;
+}
+
+function updateCounter() {
+  document.getElementById('cardCounter').textContent = `${current+1} / ${cards.length}`;
+}
+
+// ═══════════════════════════════════════════════
+// DOT NAVIGATION
+// ═══════════════════════════════════════════════
+function buildDots() {
+  const strip = document.getElementById('dotStrip');
+  strip.innerHTML = '';
+  cards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.onclick = () => { current = i; renderCard(); };
+    strip.appendChild(d);
+  });
+  updateDots();
+}
+
+function updateDots() {
+  const dots = document.getElementById('dotStrip').children;
+  for (let i = 0; i < dots.length; i++) {
+    dots[i].className = 'dot' +
+      (i === current ? ' active' : '') +
+      (cards[i].revealed ? ' done' : '');
   }
-  feedback.style.display = 'block';
 }
 
-// ============================================================
-// RESET
-// ============================================================
-function resetGame() {
-  state.attempts  = 0;
-  state.gameOver  = false;
-  state.answered  = {};
-  renderGame();
+// ═══════════════════════════════════════════════
+// SHUFFLE
+// ═══════════════════════════════════════════════
+function shuffleCards() {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  current = 0;
+  cards.forEach(c => c.revealed = false);
+  renderCard();
+  buildDots();
 }
 
-// ============================================================
-// STARS ANIMATION
-// ============================================================
-function launchStars() {
-  const container = document.getElementById('starsContainer');
-  const emojis = ['⭐','🌟','✨','🎉','🎊','🏆','💫'];
-  for (let i = 0; i < 20; i++) {
+// ═══════════════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════════════
+function spawnStars() {
+  const wrap  = document.getElementById('starsWrap');
+  const picks = ['⭐','🌟','✨','🎉','🐾','🦁','🐘','🐬'];
+  for (let i = 0; i < 14; i++) {
     setTimeout(() => {
-      const star = document.createElement('div');
-      star.className = 'star';
-      star.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-      star.style.left = Math.random() * 100 + 'vw';
-      star.style.top  = (60 + Math.random() * 30) + 'vh';
-      star.style.animationDuration = (1 + Math.random()) + 's';
-      container.appendChild(star);
-      setTimeout(() => star.remove(), 2500);
-    }, i * 80);
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.textContent = picks[Math.floor(Math.random() * picks.length)];
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.top  = (50 + Math.random() * 40) + 'vh';
+      s.style.animationDuration = (.9 + Math.random() * .8) + 's';
+      wrap.appendChild(s);
+      setTimeout(() => s.remove(), 2000);
+    }, i * 70);
   }
 }
+
+// ═══════════════════════════════════════════════
+// KEYBOARD SHORTCUT: ← → Space
+// ═══════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (document.getElementById('game').style.display === 'none') return;
+  if (e.key === 'ArrowRight') navigate(1);
+  else if (e.key === 'ArrowLeft') navigate(-1);
+  else if (e.key === ' ') { e.preventDefault(); reveal(); }
+});
 </script>
 </body>
 </html>
