@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🐾 Guess the Animal!</title>
+<title>🎯 Guess What It Is!</title>
 <style>
 /* ── Reset ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -215,6 +215,21 @@ body{
 }
 .btn-shuffle:hover{opacity:.85}
 
+/* Export/Import btns in teacher panel */
+.io-btns{display:flex;gap:10px;margin-top:12px}
+.io-btn{
+  flex:1;padding:10px 14px;border-radius:10px;
+  border:2px solid;border:2px solid #764ba2;background:#fff;
+  color:#764ba2;font-weight:700;font-size:.85rem;cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px
+}
+.io-btn:hover{background:#764ba2;color:#fff}
+.io-btn.export{border-color:#22c55e;color:#22c55e}
+.io-btn.export:hover{background:#22c55e;color:#fff}
+.io-btn.import{border-color:#f59e0b;color:#f59e0b}
+.io-btn.import:hover{background:#f59e0b;color:#fff}
+.io-btn:disabled{opacity:.4;cursor:not-allowed}
+
 /* ── Responsive ── */
 @media(max-width:480px){
   .card{padding:18px 14px}
@@ -228,7 +243,7 @@ body{
 <div class="stars-wrap" id="starsWrap"></div>
 
 <div class="header">
-  <h1>🐾 Guess the Animal!</h1>
+  <h1>🎯 Guess What It Is!</h1>
   <p>Upload photos → silhouette quiz for your class 🎓</p>
 </div>
 
@@ -257,6 +272,16 @@ body{
     <div class="batch-bar" id="batchBar"><div class="batch-fill" id="batchFill"></div></div>
 
     <div class="thumb-grid" id="thumbGrid"></div>
+
+    <div class="io-btns">
+      <button class="io-btn export" id="btnExport" onclick="exportCards()" disabled>
+        💾 Export / Save
+      </button>
+      <button class="io-btn import" id="btnImport" onclick="document.getElementById('importFile').click()">
+        📂 Import / Load
+      </button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)"/>
+    </div>
 
     <button class="btn-start" id="btnStart" onclick="startGame()" disabled>
       🚀 Start Game  (<span id="readyCount">0</span> photos ready)
@@ -423,6 +448,7 @@ function updateStartBtn() {
   const ready = cards.filter(c => c.done).length;
   document.getElementById('readyCount').textContent = ready;
   document.getElementById('btnStart').disabled = ready === 0;
+  document.getElementById('btnExport').disabled = ready === 0;
 }
 
 // ═══════════════════════════════════════════════
@@ -629,6 +655,68 @@ function spawnStars() {
       setTimeout(() => s.remove(), 2000);
     }, i * 70);
   }
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════
+function exportCards() {
+  if (cards.length === 0) return;
+
+  const data = {
+    version: 1,
+    exportDate: new Date().toISOString(),
+    items: cards.map((c, i) => ({
+      name: c.name,
+      original: c.original,   // dataURL base64
+      silhouette: c.silhouette,
+      done: c.done
+    }))
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement('a');
+  a.href = url;
+  a.download = `guess-game-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.items || !Array.isArray(data.items)) {
+        alert('Invalid file format');
+        return;
+      }
+
+      // Merge with existing cards
+      const imported = data.items.map(item => ({
+        original: item.original,
+        silhouette: item.silhouette,
+        name: item.name || '',
+        done: !!item.done
+      }));
+
+      cards = [...cards, ...imported];
+      rebuildThumbs();
+      updateStartBtn();
+
+      alert(`Imported ${imported.length} cards!`);
+    } catch (err) {
+      alert('Failed to read file: ' + err.message);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
 }
 
 // ═══════════════════════════════════════════════
